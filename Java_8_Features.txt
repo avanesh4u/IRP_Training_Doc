@@ -1,0 +1,809 @@
+Lambda expressions
+The Stream API and Collectors
+Java FX
+Nashorn
+
+
+Lambda expressions
+The lambda syntax
+Functional interfaces
+Method references
+Constructor references
+How to process data from teh Collection API
+
+
+What is Lambda Expression for?
+A simple example
+public interface FileFilter{
+boolean accept(File file)
+}
+
+Two ways to implement Lambda Expression for?
+I)
+public class JavaFileFilter implements FileFilter
+{
+  
+    public boolean accept(File file)
+    {
+      return file.getName().endsWith(".java");
+    }
+}
+
+And use it:
+JavaFileFilter fileFilter = new JavaFileFilter();
+File dir=new File("d:/tmp");
+File[] javaFiles = dir.listFiles(fileFilter);
+
+using anonymous class(we do not provide class name)
+---------------------
+FileFilter fileFilter = new FileFilter()
+{
+   @Override
+   public boolean accept(File file)
+   {
+         return file.getName().endsWith(".java");
+   }
+};
+
+
+
+File dir = new File("d:/tmp");
+File[] javaFiles = dir.listFiles(fileFilter);
+
+for(File f : files)
+{
+  System.out.println(f);
+}
+
+What is a Lambda Expression for?
+The first answer is :
+To make instances of anonymous classes easier to write and read!
+
+A First Lambda Expression
+
+
+FileFilter fileFilter = new FileFilter()
+{
+   @Override
+   public boolean accept(File file)
+   {
+         return file.getName().endsWith(".java");
+   }
+};
+
+This is a Java 8 lambda expression:
+FileFilter filter = (File file) -> file.getName().endsWith(".java");
+
+So What is a Java 8 Lambda Expression?
+Answer : another way of writing instances of anonymous classes
+
+
+
+Runnable runnable = new Runnable()
+{
+   @Override
+   public void run()
+   {
+      S.o.p("Thread job");
+   }
+}
+
+Thread t=new Thread(runnable);
+t.start();
+
+Runnable runnableLambda=()->{ S.o.p("Thread job");}
+
+or as there is only one statement, you can write down as follow without curly brackets
+
+
+Runnable runnableLambda=()-> S.o.p("Thread job");
+
+
+Comparator example
+------------------
+
+Comparator<String> comp = new Comparator<String>(){
+@Override
+public int compare(String s1,String s2)
+{
+  return Integer.compare(s1.length(),s2.length());
+}
+};
+List<String> list=Arrays.asList("***","**","****","*");
+Collections.sort(list,comp);
+
+for(String s:list)
+{
+  System.out.println(s);
+}
+
+using Lambda expression :
+Comparator<String compLambda = (String s1,String s2) -> Integer.compare(s1.length(),s2.length());
+
+List<String> list=Arrays.asList("***","**","****","*");
+Collections.sort(list,compLambda);
+
+for(String s:list)
+{
+  System.out.println(s);
+}
+
+
+Several ways of Writing a Lambda Expression
+The simplest way:
+FileFilter filter =(File file) -> file.getName().endsWith(".java");
+
+If I have more than one line of code:
+Runnable r=()->{
+ for(int i=0;i<5;i++){
+  System.out.println("Hello world!");
+  }
+};
+
+If I have more than one argument:
+Comparator<String> c= 
+  (String s1,String s2) ->
+      Integer.compare(s1.length(),s2.length());
+
+Three Questions About Lambdas
+-----------------------------
+What is the type of a lambda expression?
+
+Can a lambda be put in a variable?
+
+Is a lambda expression an object?
+
+What is the type of a lambda expression?
+Answer : functional interface
+
+A functional interface is an interface with only one abstract method
+
+Example:
+public interface Runnable
+{
+   run();
+};
+
+
+public interface Comparator<T>    ??
+{
+   int compare(T t1, T t2);
+}
+
+public interface FileFilter
+{
+   boolean accept(File pathname);
+}
+
+
+Methods from the Object class don't count.
+
+A functional interface can be annotated
+
+@FunctionalInterface
+
+It is just here for convenience, the compiler can tell me whether the interface is functional or not.
+
+Can a lambda be put in a variable?
+yes
+Comparator<String> c = 
+   (String s1,String s2) ->
+     Integer.compare(s1.length(),s2.length());
+Consequences: a lambda can be taken as a method parameter and can be returned by a method
+
+
+Is a lambda expression an object?
+Let's compare the following:
+
+Comparator<String> c =
+ (String s1,String s2) ->
+   Integer.compare(s1.length(),s2.length());
+
+Comparator<String> c =
+  new Comparator<String>(String s1,String s2){
+    public boolean compareTo(String s1,String s2)
+    {
+      Integer.compare(s1.length(),s2.length());
+    }
+};
+first : Lambda expression
+second : instance of anonymous class, 
+         Extra background process:
+         explicitly asking to JVM to create object and creating a new object is not free
+          static initializer
+          static block
+          instance intitializer(non static initializer)
+          instance block(non static block)....inheritance
+          constructor
+          object destruction
+
+A lambda expression is created without using <<new>>
+
+
+
+So with the lambda expression, performance is much better
+
+Is a lambda expression an object?
+The answer is complex, but no
+because in JVM it is recorded as an object
+Exact answer:a lambda is an object without an identity
+
+
+Functional Interfaces Toolbox
+New package:java.util.function
+With a rich set of functional interfaces(43)
+
+4 categories:
+1)Supplier
+2)Consumer
+Consumer/BiConsumer
+3)Predicate
+Predicate/BiPredicate
+4)Function
+  Function/BiFunction
+  Function/UnaryOperator
+  BiFunction/BinaryOperator
+
+
+Comparator<String> c =
+ (String s1,String s2) ->
+   Integer.compare(s1.length(),s2.length());
+Becomes:
+Comparator<String> c =
+ (s1,s2) ->
+   Integer.compare(s1.length(),s2.length());
+
+
+Method References:
+This lambda expression:
+Consumer<String> c = s->System.out.println(s);
+
+can be written like that:
+Consumer<String> c = System.out::println
+
+This lambda expression:
+Comparator<Integer> c =(i1,i2) ->Integer.comapre(i1,i2);
+
+can be written like that:
+Comparator<Integer> c=Integer::compare;
+
+So What Do We Have so Far?
+A new concept:the <<lambda expression>>,with new syntax
+A new interface concept:the <<functional interface>>
+
+Question:how can we use this to process data?
+
+How do we process data in Java?
+Where are our objects?
+Most of the time:in a Collection(or maybe List, a Set or a Map)
+Can I process this data with lambdas?
+
+List<Customer> list =...;
+list.forEach(customer -> System.out.println(customer));
+or
+List<Customer> list=...;
+list.forEach(System.out::println);
+
+Can I process this data with Lambdas?
+The good news is :yes!
+We can write:
+List<Customer> list=...;
+list.forEach(System.out::println);
+
+But... where does this forEach method come from?
+
+
+Default methods?
+This is new Java 8 concept
+It allows to change the old interfaces without breaking the existing implementations
+It also allows new patterns!
+static methods are also allowed in Java 8 interfaces.
+
+
+How to add methods to Iterable?
+If we cant put the implementations in ArrayList then...
+public interface Iterable
+{
+   default void forEach(Consumer<E> consumer)
+   {
+      for(E e:this)
+      {
+        consumer.accept(e);
+      }
+   }
+}
+
+----------------------------------------------------------
+Java 8 Stream API and Collectors
+Introduction:map/filter/reduce
+What is <<Stream>>?
+Patterns to build a Stream
+Operations on a Stream
+
+Map/Filter/Reduce
+Example:
+Let's take a list a Person
+List<Person> list = new ArrayList<>();
+Suppose we want to compute the
+<<average of the age of the people older than 20>>
+
+1st step : mapping
+The mapping step takes a List<Person> and returns a List<Integer>
+The size of both lists is the same
+
+2nd step:filtering
+The filtering step takes a List<Integer> and then returns a List<Integer>
+But there some elements have been filtered out in the process
+
+3rd step:average
+This is the reduction step, equivalent to the SQL aggregation
+
+What is a Stream?
+-----------------
+Techinical answer:a typed interface
+
+What does it do?
+It gives ways to efficiently process large amounts of data...and also smaller ones
+
+What does efficiently mean?
+Two things:
+In parallel, to leverage the computing power of multicore CPUs
+Pipelined, to avoid unnecessary intermediary computations
+
+Why can't a Collection be a Stream?
+Because Stream is a new concept and we dont want to change the way the Collection API works
+
+Stream - An object on which one can define operations
+         An object that does not hold any data
+         An object that should not change the data it processes
+         An object able to process data in << one pass >>
+         An object optimized from the algorithm point of view, and able to            to process data in parallel
+
+How can we build a Stream?
+Many patterns!
+List<Person> persons = ...;
+Stream<Person> stream = persons.stream();
+
+
+First operation:forEach()
+List<Person> persons = ...;
+Stream<Person> stream = persons.stream();
+stream.forEach(p->System.out.println(p));
+Prints all the elements of the list
+It takes an instance of Consumer as an argument
+
+A First Operation
+Interface Consumer<T>
+public interface Consumer<T>
+{
+   void accept(T t);
+}
+
+Consumer<T> is a functional interface
+Can be implemented by a lambda expression
+
+Consumer<T> c=p ->System.out.println(p);
+Consumer<T> c=System.out::println;
+
+
+
+
+.
+.
+.
+.
+--------------------------------------------------
+Java 8 Date and Time API
+------------------------
+Module Outline
+Why do we need a new Date API in Java 8?
+The new Date API from Java8:7 concepts
+Instant and Duration
+LocalDate, Period
+TemporalAdjusters
+LocalTime
+ZonedTime
+Date formatters
+
+The Date API in java 7
+
+one class:java.util.Date(and java.sql.Date)[JDK1.0]
+Date date = new Date();
+
+How can I create a date for the 2014/2/10?
+
+I must use the Calendar class
+Calendar cal = Calendar.getInstance();
+cal.set(2014,1,10);  //January is 0
+Date feb10th = cal.getTime();
+
+How can I add 7 days to feb 10th?
+cal.add(Calendar.DAY_OF_MONTH, 7);
+Date oneWeekLater = cal.getTime(); //one week later
+
+The Date class is mutable:What does it mean?
+Here is an example
+public class Customer
+{
+   private Date creationDate;
+   
+   public Date getCreationDate()
+   {
+     return this.creationDate;
+   }
+}
+
+no setter method..but
+
+Some other code could do that
+Customer customer = new Customer();
+Date d = customer.getCreationDate();
+d.setTime(0L);
+
+Thus modifying the value of the date of creation of the customer object
+How can I prevent that
+Use a defensive copy
+public class Customer
+{
+  private Date creationDate;
+  public Date getCreationDate()
+  {
+     return new Date(this.creationDate.getTime());
+  }
+}
+
+Overheads:new object to create on each call, overhead for the garbage collector
+Having a mutable Date class has a cost!
+
+The Date API in Java 8
+----------------------
+New API, package is java.time
+New key concepts
+Interoperation with the legacy API
+
+1st Concept:Instant
+And Instant is a point on the time line
+The precision is the nanosecond
+
+Instant 0 is the January the 1st,1970 at midnight GMT
+Instant.MIN is 1 billion years ago
+Instant.MAX is Dec.31 of the year 1000000000(one billion)
+Instant.now() is the current instant
+
+An Instant is immutable
+
+How can I use Instant?
+Instant start = Instant.now();
+// some long computations
+Instant end = Instant.now();
+New concept:Duration
+Duration elapsed=Duration.between(start,end);
+long millis=elapsed.toMillis();
+
+2nd Concept:Duration
+A Duration is the amount of time between two Instant
+Methods:
+toNanos(),toMillis(),toSeconds(),toMinutes(),toHours(),toDays()
+minusNanos(),...
+plusNanos(),...
+And also:
+multipliedBy(), dividedBy(),negated()
+isZero(),isNegative()
+
+3rd Concept:LocalDate
+-We need another concept for those <<dates>>
+-New Concept:LocalDate
+How to create a LocalDate?(same like Instant)
+LocalDate now = LocalDate.now();
+LocalDate dateOfBirth = LocalDate.of(1564, Month.APRIL,23);
+
+4th Concept:Period
+A Period is the amount of time between two LocalDate
+Same concept as Duration, same kind of methods
+When was Shakespeare born?
+Period p = dateOfBirth.until(now);
+System.out.println("#years = "+p.getYears());
+
+long days = dateOfBirth.until(now,ChronoUnit.DAYS);
+System.out.println("# days = "+days);
+
+5th Concept:DateAdjuster
+Useful to add(or substract) an amount of time to an instant or a LocalDate
+Use the method with()
+LocalDate now = LocalDate.now();
+now.with(Temporaladjusters.next(DayOfWeek.SUNDAY));
+
+TemporalAdjusters
+-14 static methods to adjust an Instant or a LocalDate
+-firstDayOfMonth(), lastDayOfMonth()
+-firstDayOfYear(), lastDayOfYear()
+-firstDayOfNextMonth(), firstDayOfNextYear()
+-firstInMonth(DayOfWeek.MONDAY)
+-lastInMonth(DayOfWeek.TUESDAY)
+-dayOfWeekInMonth(2,DayOfWeek.THURSDAY)
+-next(DayOfWeek.SUNDAY)
+-nextOrSame(DayOfWeek.SUNDAY)
+-previous(DayOfWeek.SUNDAY)
+-previousOrSame(DayOfWeek.SUNDAY)
+
+6th Concept:LocalTime
+A LocalTime is a time of day
+Ex:10:20
+Pattern
+ LocalTime now = LocalTime.now();
+ LocalTime time = LocalTime.of(10,20);
+Plus a set of methods to manipulate the time
+LocalTime bedTime = LocalTime.of(23,0);
+LocalTime wakeUpTime = bedTime.plusHours(8);
+
+7th Concept:Zoned Time
+-There are Time Zones all over the earth
+-Java uses the IANA database(https://www.iana.org/time-zones)
+-The zones are available from
+ Set<String> allZonesIds = ZoneId.getAvailableZoneIds();
+ String ukTZ = ZoneId.of("Europe/London");
+
+How to create a zoned time
+system.out.println(
+     ZonedDateTime.of(
+       1564, Month.APRIL.getValue(), 23, //year/month/day
+       10,0,0,0,                         //h /mn /s /nanos
+       ZoneId.of("Europe/London"))
+);
+
+ZonedDateTime exposes a set of methods to compute other zoned times:plus,minus,with etc...
+ZonedDateTime currentMeeting = 
+  ZonedDateTime.of(
+    LocalDate.of(2014,Month.MARCH, 12), //LocalDate
+    LocalTime.of(9,30),
+    ZoneId.of("Europe/London")
+);
+ZonedDateTime nextMeeting = currentMeeting.plus(Period.ofMonth(1));
+
+And to change the time zone:
+ZonedDateTime nextMeetingUS = 
+nextMeeting.withZoneSameInstant(ZoneId.of("US/Central"));
+
+How to format a Date
+-The new date API proposes a new formatter:DateTimeFormatter
+-The DateTimeFormatter proposes a set of predefined formatters, 
+ available as constants
+ ZonedDateTime nextMeetingUS =
+ nextMeeting.withZoneSameInstant(ZoneId.of("US/Central"));
+
+ System.out.println(DateTimeFormatter.ISO_DATE_TIME.format(nextMeetingUS)
+);
+//prints 2014-04-12T03:30:00-05:00[US/Central]
+
+System.out.println(
+  DateTimeFormatter.RFC_1123_DATE_TIME.format(nextMeetingUS)
+);
+// prints Sat, 12Apr 2014 03:30:00 -0500
+
+Bridges Between the APIs
+How to interoperate with the legacy Date API?
+Instant & Date:
+Date date = Date.from(instant);  //API ->legacy
+Instant instant = date.toInstant(); //legacy ->new API
+
+Instant & TimeStamp:
+TimeStamp time = TimeStamp.from(instant); //API ->legacy
+Instant instant = time.toInstant(); //legacy ->new API
+
+LocalDate & Date
+Date date = Date.from(localDate); //API ->legacy
+LocalDate localDate = date.toLocalDate(); //legacy ->new API
+
+
+LocalTime & Time
+Time time = Time.from(localTime); //API ->legacy
+LocalTime localTime = time.toLocalTime(); //legacy ->new API
+------------------------------------------------------------------
+
+
+Strings, IO and other bits and pieces
+-------------------------------------
+Java 8 is not only about Lambdas and Streams
+The String class
+Java Java I/O package
+Collection interface
+Comparators
+Numbers
+Maps : merging
+Annotations
+
+StringJoiner
+------------
+String s1="Hello"
+String s2="world";
+
+String s=s1+" "+s2; //it works
+it's not efficient and should not be used because of the multiple creations/deletions of intermdiary strings
+
+Concatenating Strings is not that simple!
+StringBuffer sb1=new StringBuffer();
+sb1.append("Hello");
+db1.append(" ").append("world");
+String s=sb1.toString();
+Better but StringBuffer is synchronized
+
+jdk 5
+StringBuilder sb1=new StringBuilder();
+sb1.append("Hello");
+sb1.append(" ").append("World");
+String s=sb1.toString();
+
+StringJoiner
+------------
+Much simpler in JDK 8 with the StringJoiner
+A StringJoiner is built with a separator
+StringJoiner sj = new StringJoiner(",");
+sj.add("one").add("two").add("three");
+
+StringJoiner sj = new StringJoiner(",","{","}");
+sj.add("one").add("two").add("three");
+System.out.println(sj);
+
+will print {one,two,three}
+
+The StringJoiner can be used from the String class
+
+//from the string class, with a vararg
+String s = String.join(","one","two","three");
+System.out.println(s);
+will print one, two, three
+
+The StringJoiner can be used from the String class
+//From the String class, with an Iterable
+String[] tab={"one","two","three"};
+String s = String.join(",",tab);
+System.out.println(s);
+--------------------------------------
+Reading text files
+A lines() method has been added on the BufferedReader class
+
+try(BufferedReader reader = 
+      new BufferedReader(
+       new FileReader(
+        new File("d:/test.txt")));){
+    Stream<String> stream = reader.lines();
+    stream.filter(line -> line.contains("Error"))
+    .findFirst()
+    .ifPresent(System.out::println);
+ }catch(IOException e)
+  {
+    ...
+  }
+ 
+
+
+Method File.lines(path)
+
+Path path = Paths.get("d:","test.txt");
+try(Stream<String> stream = Files.lines(path)){  
+stream.filter(line -> line.contains("Error"))
+    .findFirst()
+    .ifPresent(System.out::println);
+ }catch(IOException e)
+  {
+    ...
+  }
+Stream implements Autocloseable and will close the underlying file.
+
+Reading Directory entries
+-------------------------
+Path path = Paths.get("c:","windows");
+try(Stream<Path> stream = Files.list(path))
+{
+   stream.filter(paths -> path.toFile().isDirectory())
+    .forEach(System.out::println);
+}catch(Exception e)
+{..}
+
+
+try(Stream<Path> stream = Files.walk(path,2)) //One can limit the depth of the exploration
+
+------------------------------------------------------
+New methods on the Collection API
+most important : stream() and parallelStream()
+Also : spliterator()
+
+
+Display collection object using method reference
+list.forEach(System.out::println);
+
+
+Method removeIf() returns a boolean
+//removes an element on a predicate
+Collection<String> strings = Arrays.asList("one","two","three","four");
+
+//will not work if list is unmodifiable
+Collection<String> list = new ArrayList<>(strings);
+
+//returns true if the list has been modified
+boolean b = list.removeIf(s->s.length()>4);
+System.out.println(list.stream().collect(Collectors.joining(",")));
+
+Comparator
+Comparator<Person> compareLastName =
+     new Comparator<Person>(){
+
+     @Override
+     public int compare(Person p1,Person p2)
+     {
+        return p1.getLastName().compareTo(p2.getLastName());
+     }
+};
+It would also need to check if p1 or p2 is null
+
+JDK 8 way:
+Comparator<Person> comapareLastName = Comparator.comparing(Person::getLastName); 
+
+
+//comparison using the last name and then the first name
+Comparator<Person> compareLastNameThenFirstName = 
+   Comparator.comparing(Person::getLastName)
+             .thenComparing(Person::getFirstName);
+thenComparing() is a default method of the interface Comparator
+
+How to reverse  a given compartor?
+Compartor<Person> comp = ...;
+Compartor<Person> reversedComp = com.reversed(); //another default method
+
+The natural comparator
+// compares comparable objects
+Comparator<String> c = Compartor.naturalOrder();
+
+other useful Utilities
+what about null values?
+// Considers null values lesser than non-null values
+Comparator<String> c = Comparator.nullsFirst(Compartor.naturalOrder());
+
+// Considers null values greater than non-null values
+Comparator<String> c = Comparator.nullsLast(Compartor.naturalOrder());
+
+New Methods on the Number Types
+min,max,sum
+long max = Long.max(1L,2L);
+Useful to create reduction operations
+BinaryOperator<Long> sum = (l1,l2) ->l1+l2;
+                         =Long::sum;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
